@@ -2,23 +2,22 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
+from umap import UMAP  # UMAP 클래스 직접 임포트
 
-# NSL-KDD 데이터 로드 (예: KDDTrain+.txt)
+# NSL-KDD 데이터 로드
 data = pd.read_csv('KDDTrain+.txt', header=None)
 
-# 열 수 확인
+# 열 수 확인 및 처리
 print("원본 데이터 열 수:", data.shape[1])
-
-# 열 수가 43개일 경우 마지막 열 제거
 if data.shape[1] == 43:
     print("경고: 열 수가 43개입니다. 마지막 열을 제거합니다.")
     data = data.iloc[:, :42]
 
-# 랜덤하게 100,000개 샘플 추출
-data_sampled = data.sample(n=100000, random_state=42)
+# 랜덤하게 10,000개 샘플 추출
+data_sampled = data.sample(n=10000, random_state=42)
 print("샘플링된 데이터 크기:", data_sampled.shape)
 
-# NSL-KDD 열 이름 정의 (42개 열: 41개 특성 + 1개 레이블)
+# 열 이름 정의 (42개 열)
 columns = [
     'duration', 'protocol_type', 'service', 'flag', 'src_bytes', 'dst_bytes', 'land',
     'wrong_fragment', 'urgent', 'hot', 'num_failed_logins', 'logged_in',
@@ -33,7 +32,7 @@ columns = [
 ]
 data_sampled.columns = columns
 
-# 연속형/이산형 특성 선택 (범주형 열 제외)
+# 연속형/이산형 특성 선택
 numeric_columns = [
     'duration', 'src_bytes', 'dst_bytes', 'land', 'wrong_fragment', 'urgent', 'hot',
     'num_failed_logins', 'logged_in', 'num_compromised', 'root_shell', 'su_attempted',
@@ -52,11 +51,14 @@ scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 X_scaled = pd.DataFrame(X_scaled, columns=numeric_columns)
 
-# 상관관계 행렬 계산
-correlation_matrix = X_scaled.corr(method='pearson')
+# UMAP으로 차원 축소
+umap_model = UMAP(n_components=2, random_state=42)
+X_umap = umap_model.fit_transform(X_scaled)
 
-# 히트맵 시각화
-plt.figure(figsize=(12, 10))
-sns.heatmap(correlation_matrix, annot=False, cmap='coolwarm', vmin=-1, vmax=1)
-plt.title('Correlation Matrix of NSL-KDD Numeric Features (100,000 Samples)')
+# 시각화
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x=X_umap[:, 0], y=X_umap[:, 1], hue=data_sampled['label'], palette='deep')
+plt.title('UMAP Projection of NSL-KDD Numeric Features (10,000 Samples)')
+plt.xlabel('UMAP 1')
+plt.ylabel('UMAP 2')
 plt.show()

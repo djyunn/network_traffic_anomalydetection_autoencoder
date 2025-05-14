@@ -1,6 +1,6 @@
 import numpy as np
-from keras.models import Model
-from keras.layers import Input, Dense
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense
 
 def build_autoencoder(input_dim, encoding_dim=32):
     input_layer = Input(shape=(input_dim,))
